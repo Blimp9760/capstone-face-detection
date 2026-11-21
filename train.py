@@ -1,14 +1,14 @@
 """Train my own identity classifier with LFW photos, then test it."""
 
 import csv
+import json
+import sys
 import random
 from pathlib import Path
 
 import cv2
 import joblib
 import numpy as np
-from sklearn.datasets import fetch_lfw_people
-from sklearn.svm import SVC
 
 from brain import Brain, cosine
 
@@ -116,7 +116,46 @@ def learning_log_tests(finder, photos, classifier, examples, threshold):
     save_csv("learning_log_tests.csv", sorted(rows, key=lambda row: row["test"]))
 
 
+
+
+def add_my_people():
+    """Read photos in dataset/people/Name/ and remember their face features."""
+    folder = DATASET / "people"
+    folder.mkdir(parents=True, exist_ok=True)
+    brain = Brain(DATASET, use_training=False)
+    saved = {}
+
+    for person in sorted(folder.iterdir()):
+        if not person.is_dir():
+            continue
+
+        photos = [p for p in sorted(person.iterdir())
+                  if p.suffix.lower() in (".jpg", ".jpeg", ".png")]
+        vectors = []
+        for photo in photos:
+            image = cv2.imread(str(photo))
+            faces = brain.analyze(image) if image is not None else []
+            if len(faces) == 1 and faces[0]["features"] is not None:
+                vectors.append(faces[0]["features"].tolist())
+            else:
+                print(f"Skipped {photo.name}: use a photo with exactly one face")
+
+        if vectors:
+            saved[person.name] = vectors
+            print(f"Added {person.name}: {len(vectors)} photos")
+            if len(vectors) < 3:
+                print("  Tip: 3-5 different photos usually work better.")
+
+    output = DATASET / "known_people.json"
+    output.write_text(json.dumps(saved), encoding="utf-8")
+    print(f"Saved {len(saved)} people to {output}")
+    print("Now run run.py to see their names. Other people should say Unknown.")
+    if not saved:
+        print("No people saved. Put photos into dataset/people/PersonName/ first.")
+
 def main():
+    from sklearn.datasets import fetch_lfw_people
+    from sklearn.svm import SVC
     DATASET.mkdir(exist_ok=True)
     print("Downloading LFW if it is not already saved...")
     fetch_lfw_people(data_home=str(DATASET), min_faces_per_person=0,
@@ -161,4 +200,7 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1 and sys.argv[1].lower() == "people":
+        add_my_people()
+    else:
+        main()
