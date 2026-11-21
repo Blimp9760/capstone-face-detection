@@ -13,13 +13,13 @@ if choice == "2":
     path = input("Full image path: ").strip().strip('"').strip("'")
     image = cv2.imread(path)
     if image is None:
-        raise SystemExit("Could not open that image. Check its path.")
+        raise SystemExit("no image neegy")
 elif choice == "1":
     camera = cv2.VideoCapture(0)
     if not camera.isOpened():
         raise SystemExit("Could not open the camera.")
 else:
-    raise SystemExit("Please choose 1 or 2.")
+    raise SystemExit("tf u tryna press")
 
 try:
     brain = Brain(Path(__file__).resolve().parent / "dataset")
@@ -35,7 +35,7 @@ try:
             if cv2.waitKey(100) != -1:
                 break
     else:
-        print("Camera is running. Focus this terminal and press Ctrl+C to stop.")
+        print("Camera is running.")
         while True:
             okay, image = camera.read()
             if not okay:
