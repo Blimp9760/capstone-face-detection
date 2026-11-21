@@ -3,6 +3,7 @@
 from pathlib import Path
 from urllib.request import urlopen
 import hashlib
+import json
 
 import cv2
 import numpy as np
@@ -64,9 +65,16 @@ class Brain:
         self.recognizer = cv2.FaceRecognizerSF.create(
             str(model_folder / MODELS["sface"][1]), "")
 
+        # Photos of people you added yourself are stored as face vectors.
+        # If you have enrolled people, they take priority over the LFW demo.
+        self.people = {}
+        people_file = self.dataset / "known_people.json"
+        if use_training and people_file.exists():
+            self.people = json.loads(people_file.read_text(encoding="utf-8"))
+
         self.training = None
         trained_file = self.dataset / "trained.joblib"
-        if use_training and trained_file.exists():
+        if use_training and not self.people and trained_file.exists():
             import joblib
             # Only load a training file that this project created locally.
             saved = joblib.load(trained_file)
@@ -105,14 +113,26 @@ class Brain:
             except cv2.error:
                 pass
 
-            if self.training is not None and result["features"] is not None:
+            if result["features"] is not None:
                 features = result["features"]
-                guessed_name = str(self.training["classifier"].predict([features])[0])
-                reference_faces = self.training["examples"][guessed_name]
-                similarity = max(cosine(features, ref) for ref in reference_faces)
-                result["similarity"] = similarity
-                if similarity >= self.training["threshold"]:
-                    result["name"] = guessed_name
+                if self.people:
+                    # Compare with everyone you have added from your own photos.
+                    scores = [(cosine(features, saved), name)
+                              for name, photos in self.people.items()
+                              for saved in photos]
+                    if scores:
+                        score, name = max(scores)
+                        result["similarity"] = score
+                        if score >= 0.45:  # Starting point; adjust after testing.
+                            result["name"] = name
+                elif self.training is not None:
+                    # Otherwise use the SVM trained on the LFW dataset.
+                    name = str(self.training["classifier"].predict([features])[0])
+                    score = max(cosine(features, ref)
+                                for ref in self.training["examples"][name])
+                    result["similarity"] = score
+                    if score >= self.training["threshold"]:
+                        result["name"] = name
 
             results.append(result)
         return results
