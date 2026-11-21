@@ -22,6 +22,7 @@ def main():
             print("Could not open that image.")
             return
         faces = brain.analyze(image)
+        print(f"Faces detected: {len(faces)}")
         for face in faces:
             print({k: v for k, v in face.items() if k != "features"})
         cv2.imshow("Faces", draw(image, faces))
