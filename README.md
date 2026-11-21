@@ -24,6 +24,23 @@ py -3.13 run.py
 
 Choose **1** for the camera or **2** for an image. For images, paste the complete Windows file path. The program displays face boxes and confidence scores. **To stop the camera, focus the VS Code terminal and press Ctrl+C.** For a still image, close the image window to return.
 
+## Add your own known people
+
+1. Create a folder such as `dataset/people/Alex/`.
+2. Put **3–5 different photos** of Alex in it. Each photo should show only Alex's face.
+3. Repeat for any other people, using a different folder name for each.
+4. Run:
+
+```powershell
+py -3.13 train.py people
+```
+
+Then run `py -3.13 run.py` and choose camera or image. It will compare faces against the people you added. You do **not** have to retrain the LFW model each time. To remove a person, delete their folder and rerun `train.py people` (this rebuilds `known_people.json`).
+
+The new `dataset/known_people.json` contains face embeddings, not pictures, but is still **sensitive biometric data**. The photo folders and embeddings stay local and are excluded from GitHub. Only add people who have agreed. Recognition depends on photo quality and lighting; matching scores are not probabilities.
+
+## Optional: LFW training experiment
+
 To train and measure recognition on the LFW dataset, run this separately:
 
 ```powershell
