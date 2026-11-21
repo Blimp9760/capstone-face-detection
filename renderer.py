@@ -10,7 +10,8 @@ def draw(image, faces):
         label = f'{face["name"]} | face {face["confidence"]:.2f}'
         if face["similarity"] is not None:
             label += f' | match {face["similarity"]:.2f}'
-        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 200, 0), 2)
+        color = (0, 0, 255) if face["name"] == "Unknown" else (0, 200, 0)
+        cv2.rectangle(image, (x, y), (x + w, y + h), color, 2)
         cv2.putText(image, label, (max(0, x), max(20, y - 8)),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 200, 0), 2)
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
     return image
