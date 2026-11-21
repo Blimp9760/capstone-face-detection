@@ -5,6 +5,9 @@ import cv2
 
 def draw(image, faces):
     image = image.copy()
+    if not faces:
+        cv2.putText(image, "No face detected", (15, 35),
+                    cv2.FONT_HERSHEY_SIMPLEX, 0.85, (0, 0, 255), 2)
     for face in faces:
         x, y, w, h = face["box"]
         label = f'{face["name"]} | face {face["confidence"]:.2f}'
