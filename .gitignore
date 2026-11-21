@@ -1,4 +1,4 @@
-# Face photos, trained models, and results stay on this computer.
+# Dataset, face photos, trained embeddings, and personal enrollments stay local.
 dataset/*
 !dataset/.gitkeep
 __pycache__/

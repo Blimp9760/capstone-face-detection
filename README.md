@@ -1,36 +1,41 @@
 # My Face Recognition Project
 
-A Python project that finds faces with YuNet, extracts features with SFace, and trains an SVM using the LFW photo dataset. The webcam can also remember and delete people who agree to be enrolled.
+I wrote this Python project to detect faces in pictures and webcam video and check whether a face has been seen before.
 
-## Install (one time)
+## What the files do
 
-Use **Python 3.13 installed on your C: drive**, not the old network-drive `.venv`. Open PowerShell:
+- **run.py** — The main program: camera, download LFW, train an SVM, and run experiments.
+- **brain.py** — The part that finds faces. Give it an OpenCV image and it returns a bounding box, detection confidence, and face features. It can also compare saved faces.
+- **dataset/** — Downloads, trained model, test CSV files and locally enrolled faces. Nothing in this folder is uploaded to GitHub.
+
+YuNet finds faces; SFace converts faces into feature vectors. I train an SVM on features from the [LFW dataset](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_lfw_people.html). The camera instead compares against locally enrolled face vectors, so it can remember someone without retraining the SVM.
+
+## Install once (Windows PowerShell)
+
+Use your normal Python installation, not a `.venv` on a shared/network drive:
 
 ```powershell
-py -3.13 -m ensurepip --upgrade
-py -3.13 -m pip install --user numpy opencv-python scikit-learn joblib
+py -3.13 -m pip install numpy opencv-python scikit-learn joblib
 ```
 
-If `pip` already works, skip the `ensurepip` line. No virtual environment is needed. In VS Code, choose your regular Python 3.13 interpreter, not `.venv`.
+If pip is missing from that **normal** Python installation, run `py -3.13 -m ensurepip --upgrade` first. Installation is manual; running the project doesn't install anything.
 
 ## Run
 
 ```powershell
-py -3.13 run.py           # Download LFW/models, train, then test
-py -3.13 run.py camera    # Open webcam (E = enroll, D = delete, Q = quit)
-py -3.13 run.py test      # Repeat the tests
+py -3.13 run.py             # Easy numbered menu
+py -3.13 run.py camera      # Webcam: E save, D delete, Q quit
+py -3.13 run.py train       # Download LFW and train the SVM
+py -3.13 run.py test        # Test results saved as CSV in dataset/
+py -3.13 run.py test clip.mp4 Unknown  # Optional T08 real video
 ```
 
-The first run downloads the models and LFW photographs into `dataset/`. They are not uploaded to GitHub. Test results are also saved there. Later runs reuse the saved model. To retrain from scratch, delete `dataset/trained.joblib` and run again.
+Training and models download only when you choose a function that needs them. The first training run may download a large photo dataset. To retrain, delete `dataset/trained.joblib` and run the train command again.
 
-## Files
+## What the numbers mean
 
-- `run.py` — Starts the program. Nothing is installed automatically.
-- `detection_software/faces.py` — Detects faces and extracts their features.
-- `detection_software/training.py` — Downloads photos, trains the SVM and runs the tests.
-- `detection_software/camera.py` — Webcam and save/delete controls.
-- `dataset/` — Downloaded photos, model files, results and saved faces (private; ignored by GitHub).
+`box` is `[left, top, width, height]` in pixels. `confidence` says how sure **YuNet is that it detected a face**, not who it is. `similarity` is cosine similarity between face features, **not a probability** that the name is correct.
 
-The Learning Log tests T01–T07 run with LFW photographs. T08 needs a real video (`py -3.13 run.py test video.mp4 Unknown`) and otherwise says **Not Run**. T03 and T05 change an image digitally, not a real lighting or occlusion experiment. The pretrained YuNet/SFace networks are not retrained; only the SVM is trained here. A similarity score is **not** a probability. Only enroll people who consent.
+The eight Learning Log test cases are saved to `dataset/learning_log_tests.csv`. T01 is a self-match, T03/T05 are artificial image edits, T04 is a separate photo (pose not verified), and T08 is Not Run unless you provide a real video. This is a classroom demonstration, not a security system. Only store people's features with permission. Public dataset availability does not mean biometric consent.
 
-Model sources: [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet), [SFace](https://github.com/opencv/opencv_zoo/tree/main/models/face_recognition_sface). Dataset: [LFW](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_lfw_people.html). Public photos do not imply consent for personal identification use.
+OpenCV model sources: [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet) and [SFace](https://github.com/opencv/opencv_zoo/tree/main/models/face_recognition_sface).
