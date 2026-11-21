@@ -31,7 +31,7 @@ Choose **1** for camera or **2** for an image path. For the camera, focus the te
 3. Run `py -3.13 train.py` and then restart `run.py`.
 4. To remove someone, delete their photo folder and rerun `train.py`. This rebuilds the known-person list.
 
-Only use photos with permission. `dataset/known_people.json` contains sensitive face features and is kept out of GitHub. The initial similarity threshold is **0.45**, which may need adjustment after testing; similarity is not a probability of identity.
+Only use photos with permission. `dataset/known_people.json` contains sensitive face features and is kept out of GitHub. The current similarity threshold is **0.28**, chosen as a trial setting after a first small test. It must be checked with new independent photos; similarity is not a probability of identity.
 
 ## Optional LFW training experiment
 
@@ -59,6 +59,6 @@ Run `py -3.13 train.py` to enroll Tony first, then:
 py -3.13 test.py
 ```
 
-Open `dataset/evidence/test_results.csv` and `T01_result.png` through `T08_result.png`. It also saves `T03_input.png` and `T05_input.png`. Missing inputs are marked **Not Run** and exact duplicates of enrollment images in T02/T04/T08 are marked **Invalid**. Do not replace failed results with expected results. The T08 input is user-supplied, so keep an independent screenshot proving it came from the webcam. The script reports direct-comparison performance at the current `brain.py` threshold of 0.45, not the optional LFW SVM experiment.
+Open `dataset/evidence/test_results.csv` and `T01_result.png` through `T08_result.png`. It also saves `T03_input.png` and `T05_input.png`. Missing inputs are marked **Not Run** and exact duplicates of enrollment images in T02/T04/T08 are marked **Invalid**. Do not replace failed results with expected results. The T08 input is user-supplied, so keep an independent screenshot proving it came from the webcam. The script reports direct-comparison performance at the current `brain.py` threshold of 0.28, not the optional LFW SVM experiment.
 
 Models: [OpenCV Zoo](https://github.com/opencv/opencv_zoo). Dataset: [LFW](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_lfw_people.html). Publicly available LFW photos do not imply biometric consent.
