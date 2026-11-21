@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 
 DATASET = Path(__file__).resolve().parent / "dataset"
-THRESHOLD = 0.45  # Starting value, not a guarantee of identity.
+THRESHOLD = 0.28  # Trial value from observed scores; validate on new photos.
 VERSION = "48b10fa505aeb51fbd127fc60a5c660040e823b7"
 MODELS = {
     "face_detection_yunet": "face_detection_yunet_2023mar.onnx",
