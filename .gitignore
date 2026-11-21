@@ -1,0 +1,39 @@
+# Downloaded model files and manifests
+models/
+data/
+local/
+# Any captured/processed photographs or video
+*.jpg
+*.jpeg
+*.png
+*.webp
+*.bmp
+*.mp4
+*.mov
+*.avi
+*.mkv
+# Training, embeddings, personal biometric records
+*.onnx
+*.joblib
+*.pkl
+*.pickle
+*.npy
+*.npz
+*.parquet
+*.sqlite
+*.db
+# By default ALL generated experiments stay local, for review before sharing
+reports/*.csv
+reports/*.json
+reports/*.png
+reports/*.txt
+# Python and local environments
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+*.egg-info/
+build/
+dist/
+.env
+.DS_Store
