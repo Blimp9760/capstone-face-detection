@@ -1,4 +1,3 @@
-# Do not publish face photos, model weights, trained vectors or local results.
 dataset/*
 !dataset/.gitkeep
 __pycache__/
