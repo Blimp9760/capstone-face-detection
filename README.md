@@ -1,41 +1,37 @@
-# My Face Recognition Project
+# Face Detection Capstone
 
-I wrote this Python project to detect faces in pictures and webcam video and check whether a face has been seen before.
+Simple project: **run.py → brain.py → renderer.py → run.py**.
 
-## What the files do
+- **run.py** asks whether to use a webcam or a photo from disk. It never installs anything.
+- **brain.py** takes an OpenCV image and returns face boxes, detection confidence, features, and (if trained) name and cosine similarity.
+- **renderer.py** draws the brain's output on the image.
+- **train.py** separately downloads LFW, trains a small SVM on SFace embeddings, and writes real test results to `dataset/`.
+- **dataset/** contains downloaded AI models, LFW photos, the trained classifier and test CSVs. These files are local only and ignored by GitHub.
 
-- **run.py** — The main program: camera, download LFW, train an SVM, and run experiments.
-- **brain.py** — The part that finds faces. Give it an OpenCV image and it returns a bounding box, detection confidence, and face features. It can also compare saved faces.
-- **dataset/** — Downloads, trained model, test CSV files and locally enrolled faces. Nothing in this folder is uploaded to GitHub.
+## Install libraries yourself (one time)
 
-YuNet finds faces; SFace converts faces into feature vectors. I train an SVM on features from the [LFW dataset](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_lfw_people.html). The camera instead compares against locally enrolled face vectors, so it can remember someone without retraining the SVM.
-
-## Install once (Windows PowerShell)
-
-Use your normal Python installation, not a `.venv` on a shared/network drive:
+Use your normal Python installation on **C:**, not the old `.venv` stored on the network drive:
 
 ```powershell
-py -3.13 -m pip install numpy opencv-python scikit-learn joblib
+py -3.13 -m pip install --user numpy opencv-python scikit-learn joblib
 ```
 
-If pip is missing from that **normal** Python installation, run `py -3.13 -m ensurepip --upgrade` first. Installation is manual; running the project doesn't install anything.
-
-## Run
+## Use the program
 
 ```powershell
-py -3.13 run.py             # Easy numbered menu
-py -3.13 run.py camera      # Webcam: E save, D delete, Q quit
-py -3.13 run.py train       # Download LFW and train the SVM
-py -3.13 run.py test        # Test results saved as CSV in dataset/
-py -3.13 run.py test clip.mp4 Unknown  # Optional T08 real video
+py -3.13 run.py
 ```
 
-Training and models download only when you choose a function that needs them. The first training run may download a large photo dataset. To retrain, delete `dataset/trained.joblib` and run the train command again.
+Choose **1** for the camera or **2** for an image. For images, paste the complete Windows file path. The program displays face boxes and confidence scores. **To stop the camera, focus the VS Code terminal and press Ctrl+C.** For a still image, close the image window to return.
 
-## What the numbers mean
+To train and measure recognition on the LFW dataset, run this separately:
 
-`box` is `[left, top, width, height]` in pixels. `confidence` says how sure **YuNet is that it detected a face**, not who it is. `similarity` is cosine similarity between face features, **not a probability** that the name is correct.
+```powershell
+py -3.13 train.py
+```
 
-The eight Learning Log test cases are saved to `dataset/learning_log_tests.csv`. T01 is a self-match, T03/T05 are artificial image edits, T04 is a separate photo (pose not verified), and T08 is Not Run unless you provide a real video. This is a classroom demonstration, not a security system. Only store people's features with permission. Public dataset availability does not mean biometric consent.
+This downloads the original LFW photos and OpenCV YuNet/SFace models once, then trains a **linear SVM** on selected face embeddings. It keeps training, validation and final-test photos separate and uses different people for unknown-face testing. The outputs are `dataset/results.csv`, `dataset/thresholds.csv` and `dataset/learning_log_tests.csv`. T08 is marked Not Run because no real video was supplied. These reports contain **actual outputs only when train.py is executed**.
 
-OpenCV model sources: [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet) and [SFace](https://github.com/opencv/opencv_zoo/tree/main/models/face_recognition_sface).
+YuNet and SFace are already pretrained; this project trains only the SVM. A detection confidence is not an identity confidence, and a cosine similarity is not a probability. LFW photos are public research images, not proof of biometric consent. Don't upload private face images or trained embeddings to GitHub.
+
+Models: [OpenCV Zoo](https://github.com/opencv/opencv_zoo). Dataset: [LFW](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_lfw_people.html).
