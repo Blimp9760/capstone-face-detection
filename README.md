@@ -1,142 +1,59 @@
-# Capstone Face Recognition — Python / YuNet / SFace / SVM
+# My Face Recognition Capstone
 
-**Essential question:** How can I create a program that finds a face in a photo or webcam video and tells whether it has seen that person before?
+**Question:** Can I make a Python program that finds a face in a photo or webcam video and decides if it has seen that person before?
 
-This is an **offline-first educational project**, not a production security or identification product. It uses YuNet for face detection and five landmarks, SFace for alignment and pretrained face features, a newly trained **scikit-learn linear SVM** for research identities, and cosine similarity for rejecting unfamiliar faces. The live camera demo stores **consented local enrollments** instead of uploading faces to a server.
+## Run it
 
-## Simplest way to run it
+Install Python 3.11 or newer. On Windows, open this folder in VS Code or PowerShell and type:
 
-1. Install **Python 3.11 or newer** and ensure it is available in your terminal.
-2. Download/extract the entire project folder. Ensure you have internet access for the **first run**.
-3. **Windows:** double-click `start_windows.bat`, or in PowerShell run `py -3 run.py`.
-4. **macOS:** run `python3 run.py` in Terminal (or double-click `start_mac.command`, approving it if macOS asks).
-5. The script creates `.venv`, installs Python dependencies, downloads the model binaries and LFW data to **your local device**, selects distinct train/validation/test splits, extracts embeddings, **trains an SVM**, evaluates genuine and unknown identities, exports scores/plots, and runs offline unit tests.
-6. When it finishes, you may choose to open the **local webcam app**. Use `E` to enroll with permission, `D` to delete, `L` to list and `Q` to quit. Webcam frames are **not uploaded**.
+```powershell
+py -3 run.py
+```
 
-You can also run `py -3 run.py --setup-only` on Windows (or `python3 run.py --setup-only` on macOS) to do the entire training/evaluation process and quit, without opening a camera. Restart the webcam later with `py -3 run.py --camera` or `python3 run.py --camera`.
+On macOS, use `python3 run.py`.
 
-**Estimated storage:** allow room for cached LFW originals, Python libraries and ~37 MB SFace model; actual storage and execution time vary. A GPU is not required. No image captures are placed in GitHub.
+The first time, the script installs what it needs, downloads the **Labeled Faces in the Wild (LFW)** research dataset and the **YuNet/SFace** OpenCV models, trains a small SVM classifier, and tests its predictions. It then asks if you want to try the webcam.
+
+**Fix for network-drive errors:** Your Python libraries, models, dataset, and reports are now saved on your **local computer**, even if the project itself is on a mapped drive like `I:` or a `\\server\share` path. On Windows, everything downloaded or generated goes to:
+
+`%LOCALAPPDATA%\CapstoneFaceDetection`
+
+Your previous `.venv` on the network drive is no longer used. If the local Python environment needs rebuilding, run `py -3 run.py --repair`.
+
+## Other commands
+
+```powershell
+py -3 run.py --camera     # Webcam, with E to enroll, D to delete, Q to quit
+py -3 run.py --train      # Download data and retrain the classifier
+py -3 run.py --test       # Repeat the saved evaluation
+py -3 run.py --image "C:\path\photo.jpg"
+py -3 run.py --video "C:\path\recording.mp4" K01
+```
+
+When testing a video, change `K01` to the expected research identity or `Unknown`.
+
+## What the files do
+
+- `run.py` — The only script you need to start the project. It also fixes the network-drive installation problem.
+- `detection_software/faces.py` — Downloads YuNet/SFace, detects faces, extracts feature vectors and compares them.
+- `detection_software/training.py` — Downloads LFW, divides photos into training/validation/testing and trains an SVM on the features.
+- `detection_software/testing.py` — Compares thresholds and saves real test results, including T01–T08 from my Learning Log.
+- `detection_software/camera.py` — The webcam and enrollment/deletion controls.
+- `dataset/` — Placeholder for dataset files. Downloads are saved on the local computer so the GitHub repository stays small and does not publish face photos.
+- `.gitignore` — Protects downloaded photos, models and personal face data from accidentally being committed.
 
 ## How it works
 
-```text
-Photo or webcam frame
-      │
-      ▼
-YuNet — bounding boxes + 5 landmarks
-      │
-      ▼
-SFace alignCrop() — geometric normalization
-      │
-      ▼
-SFace feature() — pretrained face embedding
-      │
-      ├── Research evaluation: linear SVM trained on LFW embeddings
-      │                           + similarity to that predicted class's gallery
-      └── Local webcam: consent-based saved embedding gallery
-                                  │
-                                  ▼
-                          Cosine score + threshold
-                                  │
-                         Known person / Unknown
-```
+1. **YuNet** finds a face and its landmarks.
+2. **SFace** aligns it and converts the face into a feature vector (numbers).
+3. **An SVM trained on LFW** guesses which research identity it looks like.
+4. **Cosine similarity** checks the guess. If the score is below the chosen threshold, the answer is **Unknown**.
+5. The webcam uses a **separate local enrollment list**, rather than retraining the SVM for each visitor.
 
-**Important:** pretrained YuNet and SFace weights are *not* retrained. Training changes the **SVM identity classifier** learned from the LFW SFace vectors. SFace cosine similarity is a similarity measure from -1 to +1, **not a probability or calibrated confidence**. The threshold is selected **from validation only**; final test rows are held out until after threshold selection. LFW images are research photos, **not proof of consent**, and are **not used to enroll the webcam visitor**.
+The actual results will be in the local `results/` folder: `results.json`, `test_predictions.csv`, `thresholds.csv`, `learning_log_T01_T08.csv`, and two graphs. **T08 is Not Run unless a real video is supplied.** If an experiment fails or cannot run, the report should say so. Cosine similarity is not a confidence percentage.
 
-## Individual commands for troubleshooting or rerunning steps
+LFW images are public research data, **not proof of biometric consent**. Only enroll webcam participants who agree. Deletion removes records from the saved enrollment file but is not secure erasure of every possible backup. The results describe this small selected dataset, not universal face-recognition accuracy. Do not upload original photos, embeddings or personal face data to GitHub.
 
-Activate the local environment first (run `run.py` once to create it):
+Sources: [OpenCV Zoo YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet), [SFace](https://github.com/opencv/opencv_zoo/tree/main/models/face_recognition_sface), [OpenCV tutorial](https://docs.opencv.org/4.x/d0/dd4/tutorial_dnn_face.html), [LFW dataset](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_lfw_people.html).
 
-```powershell
-# Windows PowerShell in project folder:
-.\.venv\Scripts\python.exe -m facecap.models
-.\.venv\Scripts\python.exe -m facecap.dataset
-.\.venv\Scripts\python.exe -m facecap.train
-.\.venv\Scripts\python.exe -m facecap.evaluate
-.\.venv\Scripts\python.exe -m pytest -q
-.\.venv\Scripts\python.exe -m facecap.cli camera --threshold 0.363
-.\.venv\Scripts\python.exe -m facecap.cli list
-.\.venv\Scripts\python.exe -m facecap.cli image path\to\your_photo.jpg
-```
-
-On macOS replace `.\.venv\Scripts\python.exe` with `.venv/bin/python` and replace the image example with a real path. Separate evaluation with real prerecorded video:
-
-```bash
-.venv/bin/python -m facecap.evaluate --video /path/to/actual_clip.mp4 --video-expected Unknown
-```
-
-The `--video-expected` option may instead be a known research alias like `K01` when you have independently verified the video depicts that person. No video was packaged; without one, **T08 is `Not Run`**, not faked from a still photo. If using a video of a real person, obtain permission first.
-
-## Training/testing split and threshold selection
-
-`facecap.dataset` uses scikit-learn's `fetch_lfw_people` as an official downloader and then reads its **original cached 250×250 JPEGs** rather than converting the entire dataset to a huge in-memory array. The default experiment selects six known people, three separate validation-unknown people, and three separate test-unknown people, each with at least 15 source JPEGs, with fixed `seed=42` and at most 40 files per person. Splits for each known identity reserve approximately 60% train, 20% validation, and 20% test JPEGs. A different JPEG file is not always a truly independent camera capture: inspect duplicates if making more rigorous claims.
-
-For each validation photo, compare thresholds **0.363 / 0.700 / 0.850 / 0.900 / 0.950**. Select the threshold with the fewest scored classification errors, breaking ties by fewer false accepts, then false rejects, then smaller threshold. The independent final test images **cannot** change the chosen threshold. Detector failures are recorded separately from cosine-threshold rejections. Small and selected test groups should **never** be portrayed as population-wide accuracy.
-
-## Outputs after a successful local run
-
-| File | Meaning |
-|---|---|
-| `data/dataset_manifest.json` | **Local-only** original-image names, sample selection, hashes and split assignments |
-| `models/model_manifest.json` | **Local-only** downloaded model sources, revision, hashes, sizes |
-| `local/lfw_embeddings.joblib` | **Local-only sensitive** SFace biometric vectors; never publish |
-| `local/lfw_svm.joblib` | **Local-only** trained SVM and gallery |
-| `local/enrollments.json` | **Local-only sensitive** personally enrolled face embeddings |
-| `reports/validation_rows.csv` | Validation decisions and scores, anonymized person aliases |
-| `reports/test_rows.csv` | Held-out test labels and error categories |
-| `reports/threshold_comparison.csv` | Validation-only threshold comparisons |
-| `reports/learning_log_T01_T08.csv` | 8-case condition/result/provenance register |
-| `reports/run_audit.json` | Actual setup stage timestamps, success/failure and short diagnostic message |
-| `reports/metrics.json` | Reproducible counts, denominators, seed, versions, model hashes |
-| `reports/validation_thresholds.png` | Validation error-by-threshold plot |
-| `reports/test_confusion_matrix.png` | Final test confusion matrix |
-
-Every raw/derived face photo, pretrained binary, LFW manifest, biometric vector and all generated reports are ignored from GitHub by default for privacy. **Review and redact** any report before consciously publishing it; source code and docs are safe to commit.
-
-## Learning Log 2 experiment cases
-
-| ID | Programmatically implemented condition |
-|---|---|
-| T01 | Exact training/enrollment JPEG self-comparison (sanity check, excluded from held-out accuracy) |
-| T02 | Different JPEG of one of the same enrolled identities |
-| T03 | T02 image digitally darkened by multiplying brightness by 0.60 (not real dim lighting) |
-| T04 | Another independent JPEG; its actual camera pose is **not assumed** to differ |
-| T05 | Synthetic black mask across eye region found by landmarks; detection failures separated |
-| T06 | Test image of held-out unknown identity A |
-| T07 | Test image of a **different** held-out unknown identity B |
-| T08 | Actual decoded prerecorded-video frame **only if supplied**; otherwise Not Run |
-
-All run cases store a real timestamp, original source photo hash, processed image pixel hash (if run), faces found, similarity, applied threshold, expected/observed labels, status and reason. Example numbers in the attached Learning Log **never** appear in source code or are inserted as fabricated measurements.
-
-## Data ethics and permissions
-
-- LFW is a public research collection drawn from public imagery; public accessibility **does not establish biometric consent** or unrestricted reuse. Use for bounded educational analysis; do not redistribute the photos, publicly identify people or apply the project to surveillance/security/discipline.
-- Only record live enrollments with specific, informed permission. `E` asks for a permission confirmation and only saves embeddings (still personal biometric data), not a face photo. `D` deletes identity data from the application's current enrollment JSON and a restart reloads the deletion. **Deletion is not a promise of forensic erasure** of filesystem copies/backups.
-- Model outputs can be wrong, biased by dataset demographics, lighting, occlusion or pose. A score is not proof of identity and is never a confidence percentage.
-- Do not commit `local/`, `data/`, `models/` or generated `reports/`; do not sync your local enrollment folder to public cloud backups.
-
-See `docs/ETHICS.md`, `docs/TESTING.md`, `docs/SOURCES.md`, `docs/TROUBLESHOOTING.md`, and `LEARNING_LOG_EVIDENCE.md`.
-
-## Reproducing offline code-test results
-
-Without installing the project, if the dependencies already exist on your machine:
-
-```bash
-PYTHONPATH=src python -m pytest -q  # macOS/Linux
-# Windows PowerShell: $env:PYTHONPATH="src"; python -m pytest -q
-```
-
-The source project passed **11 offline tests**, including a synthetic-input pipeline smoke test of report generation, in an environment that **cannot reach the public internet**; therefore **model downloads, LFW training and live camera accuracy were not falsely claimed as completed**. Local automated unit tests verify decision logic, split isolation, enrollment persistence and deletion. The truth of any later training report is determined by **your own generated** `reports/metrics.json`.
-
-## GitHub repository
-
-Project source: https://github.com/Blimp9760/capstone-face-detection . The repository was **public at initial publication**. To make it private, change repository visibility in GitHub Settings. Never commit biometric data or downloaded face photographs.
-
-## References
-
-- [OpenCV Zoo YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet)
-- [OpenCV Zoo SFace](https://github.com/opencv/opencv_zoo/tree/main/models/face_recognition_sface)
-- [OpenCV DNN-based face detection and recognition](https://docs.opencv.org/4.x/d0/dd4/tutorial_dnn_face.html)
-- [scikit-learn LFW dataset API](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_lfw_people.html)
-
-This code is MIT-licensed. See `LICENSE`. Data and third-party models have separate licenses and constraints.
+> The code is AI-assisted. Actual experimental findings and any personal reflection should be checked and recorded after running the program yourself.

@@ -1,39 +1,22 @@
-# Downloaded model files and manifests
+# Only the code should go on GitHub.
+# Face photos, embeddings, and trained models remain on the computer.
+dataset/*
+!dataset/.gitkeep
+__pycache__/
+*.pyc
+.venv/
+python_env/
 models/
-data/
-local/
-# Any captured/processed photographs or video
+results/
+*.onnx
+*.joblib
+saved_faces.json
+*.npy
+*.npz
 *.jpg
 *.jpeg
 *.png
-*.webp
-*.bmp
 *.mp4
-*.mov
 *.avi
-*.mkv
-# Training, embeddings, personal biometric records
-*.onnx
-*.joblib
-*.pkl
-*.pickle
-*.npy
-*.npz
-*.parquet
-*.sqlite
-*.db
-# By default ALL generated experiments stay local, for review before sharing
-reports/*.csv
-reports/*.json
-reports/*.png
-reports/*.txt
-# Python and local environments
-.venv/
-__pycache__/
-.pytest_cache/
-*.pyc
-*.egg-info/
-build/
-dist/
-.env
-.DS_Store
+*.csv
+*.log
