@@ -1,59 +1,36 @@
-# My Face Recognition Capstone
+# My Face Recognition Project
 
-**Question:** Can I make a Python program that finds a face in a photo or webcam video and decides if it has seen that person before?
+A Python project that finds faces with YuNet, extracts features with SFace, and trains an SVM using the LFW photo dataset. The webcam can also remember and delete people who agree to be enrolled.
 
-## Run it
+## Install (one time)
 
-Install Python 3.11 or newer. On Windows, open this folder in VS Code or PowerShell and type:
-
-```powershell
-py -3 run.py
-```
-
-On macOS, use `python3 run.py`.
-
-The first time, the script installs what it needs, downloads the **Labeled Faces in the Wild (LFW)** research dataset and the **YuNet/SFace** OpenCV models, trains a small SVM classifier, and tests its predictions. It then asks if you want to try the webcam.
-
-**Fix for network-drive errors:** Your Python libraries, models, dataset, and reports are now saved on your **local computer**, even if the project itself is on a mapped drive like `I:` or a `\\server\share` path. On Windows, everything downloaded or generated goes to:
-
-`%LOCALAPPDATA%\CapstoneFaceDetection`
-
-Your previous `.venv` on the network drive is no longer used. If the local Python environment needs rebuilding, run `py -3 run.py --repair`.
-
-## Other commands
+Use **Python 3.13 installed on your C: drive**, not the old network-drive `.venv`. Open PowerShell:
 
 ```powershell
-py -3 run.py --camera     # Webcam, with E to enroll, D to delete, Q to quit
-py -3 run.py --train      # Download data and retrain the classifier
-py -3 run.py --test       # Repeat the saved evaluation
-py -3 run.py --image "C:\path\photo.jpg"
-py -3 run.py --video "C:\path\recording.mp4" K01
+py -3.13 -m ensurepip --upgrade
+py -3.13 -m pip install --user numpy opencv-python scikit-learn joblib
 ```
 
-When testing a video, change `K01` to the expected research identity or `Unknown`.
+If `pip` already works, skip the `ensurepip` line. No virtual environment is needed. In VS Code, choose your regular Python 3.13 interpreter, not `.venv`.
 
-## What the files do
+## Run
 
-- `run.py` — The only script you need to start the project. It also fixes the network-drive installation problem.
-- `detection_software/faces.py` — Downloads YuNet/SFace, detects faces, extracts feature vectors and compares them.
-- `detection_software/training.py` — Downloads LFW, divides photos into training/validation/testing and trains an SVM on the features.
-- `detection_software/testing.py` — Compares thresholds and saves real test results, including T01–T08 from my Learning Log.
-- `detection_software/camera.py` — The webcam and enrollment/deletion controls.
-- `dataset/` — Placeholder for dataset files. Downloads are saved on the local computer so the GitHub repository stays small and does not publish face photos.
-- `.gitignore` — Protects downloaded photos, models and personal face data from accidentally being committed.
+```powershell
+py -3.13 run.py           # Download LFW/models, train, then test
+py -3.13 run.py camera    # Open webcam (E = enroll, D = delete, Q = quit)
+py -3.13 run.py test      # Repeat the tests
+```
 
-## How it works
+The first run downloads the models and LFW photographs into `dataset/`. They are not uploaded to GitHub. Test results are also saved there. Later runs reuse the saved model. To retrain from scratch, delete `dataset/trained.joblib` and run again.
 
-1. **YuNet** finds a face and its landmarks.
-2. **SFace** aligns it and converts the face into a feature vector (numbers).
-3. **An SVM trained on LFW** guesses which research identity it looks like.
-4. **Cosine similarity** checks the guess. If the score is below the chosen threshold, the answer is **Unknown**.
-5. The webcam uses a **separate local enrollment list**, rather than retraining the SVM for each visitor.
+## Files
 
-The actual results will be in the local `results/` folder: `results.json`, `test_predictions.csv`, `thresholds.csv`, `learning_log_T01_T08.csv`, and two graphs. **T08 is Not Run unless a real video is supplied.** If an experiment fails or cannot run, the report should say so. Cosine similarity is not a confidence percentage.
+- `run.py` — Starts the program. Nothing is installed automatically.
+- `detection_software/faces.py` — Detects faces and extracts their features.
+- `detection_software/training.py` — Downloads photos, trains the SVM and runs the tests.
+- `detection_software/camera.py` — Webcam and save/delete controls.
+- `dataset/` — Downloaded photos, model files, results and saved faces (private; ignored by GitHub).
 
-LFW images are public research data, **not proof of biometric consent**. Only enroll webcam participants who agree. Deletion removes records from the saved enrollment file but is not secure erasure of every possible backup. The results describe this small selected dataset, not universal face-recognition accuracy. Do not upload original photos, embeddings or personal face data to GitHub.
+The Learning Log tests T01–T07 run with LFW photographs. T08 needs a real video (`py -3.13 run.py test video.mp4 Unknown`) and otherwise says **Not Run**. T03 and T05 change an image digitally, not a real lighting or occlusion experiment. The pretrained YuNet/SFace networks are not retrained; only the SVM is trained here. A similarity score is **not** a probability. Only enroll people who consent.
 
-Sources: [OpenCV Zoo YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet), [SFace](https://github.com/opencv/opencv_zoo/tree/main/models/face_recognition_sface), [OpenCV tutorial](https://docs.opencv.org/4.x/d0/dd4/tutorial_dnn_face.html), [LFW dataset](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_lfw_people.html).
-
-> The code is AI-assisted. Actual experimental findings and any personal reflection should be checked and recorded after running the program yourself.
+Model sources: [YuNet](https://github.com/opencv/opencv_zoo/tree/main/models/face_detection_yunet), [SFace](https://github.com/opencv/opencv_zoo/tree/main/models/face_recognition_sface). Dataset: [LFW](https://scikit-learn.org/stable/modules/generated/sklearn.datasets.fetch_lfw_people.html). Public photos do not imply consent for personal identification use.

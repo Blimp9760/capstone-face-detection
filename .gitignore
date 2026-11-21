@@ -1,22 +1,6 @@
-# Only the code should go on GitHub.
-# Face photos, embeddings, and trained models remain on the computer.
+# Face photos, trained models, and results stay on this computer.
 dataset/*
 !dataset/.gitkeep
 __pycache__/
 *.pyc
 .venv/
-python_env/
-models/
-results/
-*.onnx
-*.joblib
-saved_faces.json
-*.npy
-*.npz
-*.jpg
-*.jpeg
-*.png
-*.mp4
-*.avi
-*.csv
-*.log
